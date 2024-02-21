@@ -29,6 +29,13 @@ if("must".equals(user_id) && "1234".equals(user_pw)) {
 }
 else {
 	//로그인 실패한 경우 경고창을 띄운 후 뒤로 이동한다. 
-	JSFunction.alertBack("로그인에 실패했습니다.", out);
+	//JSFunction.alertBack("로그인에 실패했습니다.", out);
+%>
+	<script>
+		alert('로그인에 실패했슈!!');
+		history.go(-1);
+	</script>
+
+<%
 }
 %>
