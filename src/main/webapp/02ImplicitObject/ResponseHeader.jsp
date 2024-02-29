@@ -41,6 +41,9 @@ response.addIntHeader("myNumber", 1004); //1004 추가
 //최초 '홍길동'이 추가된 후 '안중근'으로 변경된다. 
 response.addHeader("myName", add_str); //홍길동
 response.setHeader("myName", "안중근"); // 안중근 수정
+
+//웹브라우저가 인식하지 못하는 컨텐츠타입을 응답헤더에 설정하면 다운로드창을 띄우게 된다.
+//response.setContentType("application/octet-stream");
 %>
 <html>
 <head>
