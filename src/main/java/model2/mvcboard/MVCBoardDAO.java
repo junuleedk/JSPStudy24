@@ -189,20 +189,27 @@ public class MVCBoardDAO extends DBConnPool {
 		}
 	}
 	
-	public int updateEdit(BoardDTO dto) {
+	//게시물 수정
+	public int updatePost(MVCBoardDTO dto) {
 		int result = 0;
 		
 		try {
-			
-			//쿼리문 작성
-			String query = "UPDATE board SET "
-						 + " visitcount=visitcount+1 "
-						 + " WHERE idx=?";
+			/*
+			 비회원제 게시판은 패스워드를 통해 검증을 진행한 후 수정이나 삭제를 해야한다.
+			 따라서 아래와 같이 where절에는 idx와 pass까지 조건을 추가하는 것이 좋다. 
+			 */
+			String query = "UPDATE mvcboard"
+						 + " SET title=?, name=?, content=?, ofile=?, sfile=? "
+						 + " WHERE idx=? and pass=?";
 			//인파라미터 설정
 			psmt = con.prepareStatement(query);
 			psmt.setString(1,  dto.getTitle());
-			psmt.setString(2,  dto.getContent());
-			psmt.setString(3,  dto.getNum());
+			psmt.setString(2,  dto.getName());
+			psmt.setString(3,  dto.getContent());
+			psmt.setString(4,  dto.getOfile());
+			psmt.setString(5,  dto.getSfile());
+			psmt.setString(6,  dto.getIdx());
+			psmt.setString(7,  dto.getPass());
 			//쿼리문을 실행
 			result = psmt.executeUpdate();
 		}
@@ -213,14 +220,45 @@ public class MVCBoardDAO extends DBConnPool {
 		return result;
 	}
 	
-	public int deletePost(BoardDTO dto) {
+	//패스워드 검증
+	public boolean confirmPassword(String pass, String idx) {
+		boolean isCorr = true;
+		try {
+			//일련번호와 패스워드의 조건에 만족하는 레코드가 있는지 확인
+			String sql = "SELECT COUNT(*) FROM mvcboard "
+					   + " WHERE pass=? AND idx=?";
+			psmt = con.prepareStatement(sql);
+			psmt.setString(1, pass);
+			psmt.setString(2, idx);
+			rs = psmt.executeQuery();
+			//count()함수는 반드시 결과값이 있으므로 if문 없이 next()를 호출한다.
+			//조건에 만족하지 않으면 0, 만족하면 1을 반환한다.
+			rs.next();
+			
+			if(rs.getInt(1) == 0) {
+				//조건에 만족하는 레코드가 없는 경우..
+				isCorr = false;
+			}
+		}
+		catch(Exception e) {
+			//쿼리문 실행도중 예외가 발생되면 catch절로 
+			//넘어오므로 이 경우에도 false 설정해야한다.
+			isCorr = false;
+			e.printStackTrace();
+		}
+		return isCorr;
+	}
+	
+	//게시물 삭제
+	public int deletePost(String idx) {
 		int result = 0;
 		
 		try {
+			//일련번호에 해당하는 게시물 1개 삭제
 			//인파라미터가 있는 delete쿼리문 작성
-			String query = "DELETE FROM board WHERE num=?";
+			String query = "DELETE FROM mvcboard WHERE idx=?";
 			psmt = con.prepareStatement(query);
-			psmt.setString(1,  dto.getNum());
+			psmt.setString(1,  idx);
 			result = psmt.executeUpdate();
 		}
 		catch(Exception e) {
@@ -229,5 +267,17 @@ public class MVCBoardDAO extends DBConnPool {
 		}
 		return result;
 	}
-
+	
+	//파일 다운로드 수 증가
+	public void downCountPlus(String idx) {
+		String sql = "UPDATE mvcboard SET "
+				   + " downcount=downcount+1 "
+				   + " WHERE idx=? ";
+		try {
+			psmt = con.prepareStatement(sql);
+			psmt.setString(1, idx);
+			psmt.executeUpdate();
+		}
+		catch (Exception e) {}
+	}
 }
